@@ -36,8 +36,8 @@ function Sidebar() {
             show={showBookings}
             toggle={() => setShowBookings(!showBookings)}
             items={[
-              { label: 'My Bookings', icon: <FaClipboardList size={16} />, to: '/bookings/my' },
-              { label: 'New Request', icon: <FaPlusCircle size={16} />, to: '/bookings/new' },
+              { label: 'My Bookings', icon: <FaClipboardList size={16} />, to: '/bookings/my_booking' },
+              { label: 'New Request', icon: <FaPlusCircle size={16} />, to: '/booking/new_request' },
             ]}
           />
 
@@ -49,7 +49,7 @@ function Sidebar() {
             toggle={() => setShowVenues(!showVenues)}
             items={[
               { label: 'Browse Venues', icon: <FaSearch size={16} />, to: '/venues/browse' },
-              { label: 'Availability', icon: <FaClock size={16} />, to: '/available' },
+              { label: 'Availability', icon: <FaClock size={16} />, to: '/available_venue' },
             ]}
           />
 

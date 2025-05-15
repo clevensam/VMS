@@ -9,6 +9,7 @@ import {
 import { Link } from 'react-router-dom';
 import VenueCards from '../components/venueCards';
 import Calendar from '../components/calenda';
+import RecentlyBooked from '../components/recentBooking';
 const Dashboard = () => {
   return (
     <div className="p-6 space-y-6">
@@ -51,7 +52,7 @@ const Dashboard = () => {
 
         {/* Stat Card 3 */}
         <Link
-          to="/available"
+          to="/available_venue"
           className="rounded-xl text-white p-5 flex items-center gap-4 bg-green-600 hover:shadow-lg transition duration-300"
         >
           <div className="bg-white rounded-full w-14 h-14 flex items-center justify-center">
@@ -78,8 +79,8 @@ const Dashboard = () => {
         </Link>
       </div>
 <VenueCards/>
-  <h2 className="text-lg font-bold text-gray-800 ml-152">Calendar</h2>
-<Calendar/>
+<RecentlyBooked/>
+
     </div>
   );
 };

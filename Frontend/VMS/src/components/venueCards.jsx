@@ -1,37 +1,24 @@
-import React from 'react';
-function VenueCards(){
-    return (
-        <>
-      {/* Venue Cards Section */}
+import React, { useState } from 'react';
+import BookingModal from './formModal';
+
+function VenueCards() {
+  const [selectedVenue, setSelectedVenue] = useState(null);
+
+  const venues = [
+    { title: 'Hall A-12', desc: 'Lecture • 80 seats' },
+    { title: 'Lab B-05', desc: 'Computer • 24 seats' },
+    { title: 'Room C-33', desc: 'Conference • 12 seats' },
+    { title: 'Auditorium', desc: 'Main • 200 seats' },
+    { title: 'Seminar D-8', desc: 'Discussion • 30 seats' },
+    { title: 'Studio E-15', desc: 'Media • 15 seats' },
+  ];
+
+  return (
+    <>
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-gray-800">Available Venues</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {[
-            {
-              title: 'Hall A-12',
-              desc: 'Lecture • 80 seats',
-            },
-            {
-              title: 'Lab B-05',
-              desc: 'Computer • 24 seats',
-            },
-            {
-              title: 'Room C-33',
-              desc: 'Conference • 12 seats',
-            },
-            {
-              title: 'Auditorium',
-              desc: 'Main • 200 seats',
-            },
-            {
-              title: 'Seminar D-8',
-              desc: 'Discussion • 30 seats',
-            },
-            {
-              title: 'Studio E-15',
-              desc: 'Media • 15 seats',
-            },
-          ].map((venue, i) => (
+          {venues.map((venue, i) => (
             <div
               key={i}
               className="bg-white rounded-xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-shadow text-center"
@@ -51,15 +38,25 @@ function VenueCards(){
                   WiFi
                 </span>
               </div>
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 mt-4 rounded-full transition-colors">
+              <button
+                onClick={() => setSelectedVenue(venue.title)}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 mt-4 rounded-full transition-colors"
+              >
                 Quick Book
               </button>
             </div>
           ))}
         </div>
       </div>
-      </>
-    )
+
+      {/* Modal with Reusable Form */}
+      {selectedVenue && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
+          <BookingModal initialVenue={selectedVenue} onClose={() => setSelectedVenue(null)} />
+        </div>
+      )}
+    </>
+  );
 }
+
 export default VenueCards;
-    

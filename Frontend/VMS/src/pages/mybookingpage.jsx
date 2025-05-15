@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import Sidebar from './sidebar'
-import TopNavbar from './Topnavbar'
-import Dashboard from '../pages/Dashboard'
+import Sidebar from '../components/sidebar'
+import TopNavbar from '../components/Topnavbar'
 
-const Layout = () => {
+import MyBookings from '../components/bookinglist'
+const MyBookingsPage= () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
@@ -20,8 +20,8 @@ const Layout = () => {
       <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
         <TopNavbar toggleSidebar={toggleSidebar}/>
         <div className="flex-1 overflow-auto p-4 py-1">
-          <Dashboard/>
       
+      <MyBookings/>
         
         </div>
       </div>
@@ -29,4 +29,4 @@ const Layout = () => {
   )
 }
 
-export default Layout
+export default MyBookingsPage;
