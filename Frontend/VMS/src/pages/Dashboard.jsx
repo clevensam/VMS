@@ -24,7 +24,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Stat Card 1 */}
         <Link
-          to="/bookings/upcoming"
+          to="/bookings/my_booking"
           className="rounded-xl text-white p-5 flex items-center gap-4 bg-blue-600 hover:shadow-lg transition duration-300"
         >
           <div className="bg-white rounded-full w-14 h-14 flex items-center justify-center">
@@ -38,7 +38,7 @@ const Dashboard = () => {
 
         {/* Stat Card 2 */}
         <Link
-          to="/bookings/pending"
+          to="/bookings/my_booking"
           className="rounded-xl text-white p-5 flex items-center gap-4 bg-yellow-400 hover:shadow-lg transition duration-300"
         >
           <div className="bg-white rounded-full w-14 h-14 flex items-center justify-center">
@@ -66,7 +66,7 @@ const Dashboard = () => {
 
         {/* Stat Card 4 */}
         <Link
-          to="/bookings/conflicts"
+          to="/bookings/my_booking"
           className="rounded-xl text-white p-5 flex items-center gap-4 bg-red-600 hover:shadow-lg transition duration-300"
         >
           <div className="bg-white rounded-full w-14 h-14 flex items-center justify-center">

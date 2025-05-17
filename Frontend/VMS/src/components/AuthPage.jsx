@@ -1,5 +1,5 @@
 import { useState } from 'react';
-
+import axios from 'axios';
 const AuthPage = () => {
   const [activeTab, setActiveTab] = useState('signup');
   const [currentSlide, setCurrentSlide] = useState(0);

@@ -3,8 +3,8 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from '../components/sidebar'
 import TopNavbar from '../components/Topnavbar'
 import VenueAvailability from '../components/AvailableVenue'
-
-const AvailabilityPage= () => {
+import Settings from '../components/settings'
+const SettingPage= () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
@@ -20,7 +20,7 @@ const AvailabilityPage= () => {
       <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
         <TopNavbar toggleSidebar={toggleSidebar}/>
         <div className="flex-1 overflow-auto  mt-8">
-       <VenueAvailability/>
+     <Settings/>
           <Outlet />
         </div>
       </div>
@@ -28,4 +28,4 @@ const AvailabilityPage= () => {
   )
 }
 
-export default AvailabilityPage; 
+export default SettingPage; 
