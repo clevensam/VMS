@@ -17,60 +17,36 @@ const Calendar = () => {
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
-  const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
+  const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
+  const endDate = endOfWeek(monthEnd, { weekStartsOn: 0 });
 
-  const handlePrevMonth = () => {
-    setCurrentDate(subMonths(currentDate, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentDate(addMonths(currentDate, 1));
-  };
-
-  // Sample events
-  const events = {
-    '2025-05-15': ['Design review', 'Sales meeting'],
-    '2025-05-17': ['Venue booked for Conference A'],
-    '2025-05-22': ['Team Building - Garden Venue'],
-  };
+  const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+  const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
 
   const renderHeader = () => (
-    <div className="flex justify-between items-center mb-6">
-      <h1 className="text-2xl font-bold text-gray-800">
+    <div className="flex justify-between items-center mb-6 px-6">
+      <button onClick={handlePrevMonth} className="text-gray-500 hover:text-gray-700 text-xl font-bold">&lt;</button>
+      <h2 className="text-2xl font-bold text-gray-800">
         {format(currentDate, 'MMMM yyyy')}
-      </h1>
-      <div className="flex space-x-2">
-        <button
-          onClick={handlePrevMonth}
-          className="px-3 py-1 bg-gray-100 rounded-md hover:bg-gray-200"
-        >
-          &lt;
-        </button>
-        <button
-          onClick={handleNextMonth}
-          className="px-3 py-1 bg-gray-100 rounded-md hover:bg-gray-200"
-        >
-          &gt;
-        </button>
-      </div>
+      </h2>
+      <button onClick={handleNextMonth} className="text-gray-500 hover:text-gray-700 text-xl font-bold">&gt;</button>
     </div>
   );
 
   const renderDays = () => {
     const days = [];
     const dateFormat = 'EEE';
-    const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const start = startOfWeek(currentDate, { weekStartsOn: 0 });
 
     for (let i = 0; i < 7; i++) {
       days.push(
-        <div key={i} className="text-sm font-medium text-center text-gray-500 py-2">
-          {format(addDays(start, i), dateFormat)}
+        <div key={i} className="text-base font-semibold text-center text-gray-600">
+          {format(addDays(start, i), dateFormat).substring(0, 3)}
         </div>
       );
     }
 
-    return <div className="grid grid-cols-7 mb-2">{days}</div>;
+    return <div className="grid grid-cols-7 gap-2 px-4 pb-4">{days}</div>;
   };
 
   const renderCells = () => {
@@ -81,34 +57,22 @@ const Calendar = () => {
     while (day <= endDate) {
       for (let i = 0; i < 7; i++) {
         const formattedDate = format(day, 'd');
-        const dayKey = format(day, 'yyyy-MM-dd');
-        const dayEvents = events[dayKey] || [];
+        const isCurrentMonth = isSameMonth(day, monthStart);
+        const isToday = isSameDay(day, new Date());
 
         days.push(
           <div
             key={day.toString()}
-            className={`min-h-24 p-2 border border-gray-100 transition-all ${
-              !isSameMonth(day, monthStart) ? 'bg-gray-50 text-gray-400' : ''
-            }`}
+            className="flex justify-center items-center h-14 w-14 mx-auto my-1"
           >
             <div
-              className={`text-right ${
-                isSameDay(day, new Date())
-                  ? 'bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center ml-auto'
-                  : ''
-              }`}
+              className={`w-10 h-10 flex items-center justify-center text-base font-medium
+                ${isToday ? 'bg-blue-500 text-white' : ''}
+                ${!isCurrentMonth ? 'text-gray-300' : 'text-gray-800'}
+                ${!isToday ? 'hover:bg-gray-100' : ''}
+                rounded-full transition`}
             >
               {formattedDate}
-            </div>
-            <div className="mt-1 space-y-1">
-              {dayEvents.map((event, index) => (
-                <div
-                  key={index}
-                  className="text-xs p-1 bg-green-100 text-green-800 rounded truncate"
-                >
-                  {event}
-                </div>
-              ))}
             </div>
           </div>
         );
@@ -117,18 +81,18 @@ const Calendar = () => {
       }
 
       rows.push(
-        <div key={day.toString()} className="grid grid-cols-7">
+        <div key={day.toString()} className="grid grid-cols-7 gap-2">
           {days}
         </div>
       );
       days = [];
     }
 
-    return <div className="border rounded-lg overflow-hidden">{rows}</div>;
+    return <div className="px-4">{rows}</div>;
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-white rounded-xl shadow-md">
+    <div className="w-[500px] mx-auto mt-12 p-6 bg-white rounded-2xl shadow-lg">
       {renderHeader()}
       {renderDays()}
       {renderCells()}
