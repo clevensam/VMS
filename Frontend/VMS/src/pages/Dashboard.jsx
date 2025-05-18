@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import VenueCards from '../components/venueCards';
 import Calendar from '../components/calenda';
 import RecentlyBooked from '../components/recentBooking';
+import Footer from '../components/footer';
 
 const Dashboard = () => {
   return (
@@ -85,6 +86,7 @@ const Dashboard = () => {
 
       {/* Recently Booked Section */}
       <RecentlyBooked />
+      <Footer/>
     </div>
   );
 };

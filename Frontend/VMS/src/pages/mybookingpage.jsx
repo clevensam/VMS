@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from '../components/sidebar'
 import TopNavbar from '../components/Topnavbar'
-
 import MyBookings from '../components/bookinglist'
 const MyBookingsPage= () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -20,11 +19,10 @@ const MyBookingsPage= () => {
       <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
         <TopNavbar toggleSidebar={toggleSidebar}/>
         <div className="flex-1 overflow-auto p-4 py-1">
-      
       <MyBookings/>
-        
         </div>
       </div>
+    
     </div>
   )
 }
