@@ -37,7 +37,7 @@
 
 | Interface       | Preview |
 |-----------------|---------|
-| Homepage        | ![Homepage](./Frontend/VMS/public/Dashboad.png) |
+| Homepage        | ![Homepage](./Frontend/VMS/public/Dashboard.png) |
 | Booking Form    | ![Booking Form](./Frontend/VMS/public/bookingForm.png) |
 | Admin Dashboard | ![Admin Dashboard](./screenshots/admin-dashboard.png) |
 
