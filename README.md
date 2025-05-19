@@ -37,8 +37,8 @@
 
 | Interface       | Preview |
 |-----------------|---------|
-| Homepage        | ![Homepage](./screenshots/homepage.png) |
-| Booking Form    | ![Booking Form](./screenshots/booking-form.png) |
+| Homepage        | ![Homepage](./Frontend/VMS/public/Dashboad.png) |
+| Booking Form    | ![Booking Form](./Frontend/VMS/public/bookingForm.png) |
 | Admin Dashboard | ![Admin Dashboard](./screenshots/admin-dashboard.png) |
 
 ---
@@ -50,3 +50,8 @@
 ```bash
 git clone https://github.com/clevensam/VMS.git
 cd VMS
+### 1.  Backend Setup (Node.js)'
+
+```bash
+cd backend
+npm install
