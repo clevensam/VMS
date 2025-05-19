@@ -16,7 +16,6 @@
 - 🔍 Advanced filtering and search
 - 📊 Admin dashboard with stats
 
-- 
 
 ---
 
@@ -33,7 +32,6 @@
 
 ## 📸 Screenshots
 
-> Add these to a `/screenshots` folder in your project directory.
 
 | Interface       | Preview |
 |-----------------|---------|
