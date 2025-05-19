@@ -50,7 +50,7 @@
 ```bash
 git clone https://github.com/clevensam/VMS.git
 cd VMS
-### 1.  Backend Setup (Node.js)'
+## 1.  Backend Setup (Node.js)'
 
 ```bash
 cd backend
