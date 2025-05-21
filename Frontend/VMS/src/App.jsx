@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout'
 import AuthPage from './components/AuthPage'
 import VenueCards from './components/venueCards'
@@ -8,11 +8,16 @@ import AvailabilityPage from './pages/AvailabilityPage'
 import CalendarPage from './pages/pageCalendar'
 import SettingPage from './pages/settingsPage'
 function App() {
+  const token = localStorage.getItem('token');
+   const handleLogout = () => {
+    localStorage.removeItem('token'); // Remove token
+    window.location.href = '/';       // Redirect to login page
+  };
   return (
     <Router>
       <Routes>
-        <Route path="/Dashboard" element={<Layout />}/>
-        <Route path="/" element={<AuthPage />}/>
+        <Route path="/" element={token ? <Navigate to="/Dashboard" /> : <AuthPage />} />
+        <Route path="/Dashboard" element={<Layout handleLogout={handleLogout}/>}/>
         <Route path="/available_venue" element={<AvailabilityPage/>}/>
          <Route path="/booking/new_request" element={<BookingPage/>}/>
           <Route path="/bookings/my_booking" element={<MyBookingsPage/>}/>
