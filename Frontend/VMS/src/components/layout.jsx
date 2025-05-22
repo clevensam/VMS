@@ -21,18 +21,13 @@ const Layout = ({ handleLogout }) => {
 
         <div className="flex-1 overflow-auto p-4 py-1">
           <div className="flex justify-end mb-4">
-            {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            >
-              Logout
-            </button>
+           {/* Logout Button */}
+            
           </div>
 
           <Dashboard />
         </div>
-      </div>
+      </div> 
     </div>
   );
 };

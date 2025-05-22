@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FaChartBar,
   FaCalendarAlt,
@@ -13,11 +13,17 @@ import {
   FaPlusCircle,
   FaSearch,
   FaClock,
-} from 'react-icons/fa'
+} from 'react-icons/fa';
 
 function Sidebar() {
-  const [showBookings, setShowBookings] = useState(false)
-  const [showVenues, setShowVenues] = useState(false)
+  const [showBookings, setShowBookings] = useState(false);
+  const [showVenues, setShowVenues] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('token'); // Remove token
+    navigate('/');                    // Redirect to login
+  };
 
   return (
     <div className="h-screen w-64 bg-white shadow-md flex flex-col justify-between px-4 py-6">
@@ -43,7 +49,7 @@ function Sidebar() {
 
           {/* Venues */}
           <SubMenu
-            icon={<FaBuilding size={20} />}   
+            icon={<FaBuilding size={20} />}
             label="Venues"
             show={showVenues}
             toggle={() => setShowVenues(!showVenues)}
@@ -61,14 +67,24 @@ function Sidebar() {
       {/* Footer */}
       <div className="space-y-4 text-base font-semibold">
         <MenuItem icon={<FaQuestionCircle size={20} />} label="Help" to="/help" />
-        <MenuItem icon={<FaSignOutAlt size={20} />} label="Log out" to="/logout" />
+        
+        {/* Logout as button */}
+        <button
+          onClick={handleLogout}  
+          className="flex items-center gap-3 text-gray-800 hover:bg-red-100 px-4 py-2 rounded cursor-pointer transition w-full"
+        >
+          <FaSignOutAlt size={20} />
+          <span>Log out</span>
+        </button>
+
+        {/* User Info */}
         <div className="flex items-center space-x-3 mt-4">
           <div className="w-9 h-9 bg-blue-500 rounded-full text-white flex items-center justify-center text-lg font-bold">U</div>
           <span className="text-gray-800 font-medium">User Name</span>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 const MenuItem = ({ icon, label, to }) => (
@@ -79,7 +95,7 @@ const MenuItem = ({ icon, label, to }) => (
     {icon}
     <span>{label}</span>
   </Link>
-)
+);
 
 const SubMenu = ({ icon, label, show, toggle, items }) => (
   <div>
@@ -109,6 +125,6 @@ const SubMenu = ({ icon, label, show, toggle, items }) => (
       </div>
     )}
   </div>
-)
+);
 
-export default Sidebar
+export default Sidebar;
