@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
-const BookingForm = () => {
+const BookingForm = ({ onBookingCreated }) => {
   const [formData, setFormData] = useState({
     venue: '',
     category: '',
@@ -9,6 +10,8 @@ const BookingForm = () => {
     attendees: 1,
     purpose: ''
   });
+
+  const [loading, setLoading] = useState(false);
 
   const venues = [
     { id: 'hall1', name: 'Main Hall', capacity: 100 },
@@ -26,9 +29,40 @@ const BookingForm = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Booking Submitted:", formData);
+
+    // Purpose must not be empty or whitespace
+    if (!formData.purpose.trim()) {
+      alert('Purpose cannot be empty.');
+      return;
+    }
+
+    // Attendees must not exceed venue capacity
+    const selectedVenue = venues.find(v => v.id === formData.venue);
+    if (selectedVenue && formData.attendees > selectedVenue.capacity) {
+      alert(`Attendees exceed capacity of ${selectedVenue.name} (${selectedVenue.capacity})`);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post('http://localhost:5000/api/bookings', formData);
+      console.log('Booking Response:', response.data);
+      alert('Booking successful!');
+      handleCancel();
+
+      // Notify parent to refresh booking cards
+      if (onBookingCreated) {
+        onBookingCreated();
+      }
+
+    } catch (error) {
+      console.error('Booking failed:', error);
+      alert('Booking failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -43,7 +77,11 @@ const BookingForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md p-4 bg-white rounded-md shadow-lg ml-120">
+    <form 
+      onSubmit={handleSubmit} 
+      className="w-full max-w-md p-4 bg-white rounded-md shadow-lg ml-120 mb-10"
+      autoComplete="off"
+    >
       <h2 className="text-lg font-semibold mb-4">Booking Request</h2>
 
       {/* Venue Selection */}
@@ -54,7 +92,7 @@ const BookingForm = () => {
           id="venue"
           value={formData.venue}
           onChange={handleChange}
-          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
+          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring"
           required
         >
           <option value="">Select a venue</option>
@@ -74,7 +112,7 @@ const BookingForm = () => {
           id="category"
           value={formData.category}
           onChange={handleChange}
-          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
+          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring"
           required
         >
           <option value="">Select category</option>
@@ -94,7 +132,7 @@ const BookingForm = () => {
             id="startDate"
             value={formData.startDate}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring"
             required
           />
         </div>
@@ -105,7 +143,7 @@ const BookingForm = () => {
             id="duration"
             value={formData.duration}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring"
           >
             <option value="30">30</option>
             <option value="60">60</option>
@@ -124,7 +162,7 @@ const BookingForm = () => {
           id="attendees"
           value={formData.attendees}
           onChange={handleChange}
-          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
+          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring"
           min="1"
           required
         />
@@ -139,7 +177,7 @@ const BookingForm = () => {
           value={formData.purpose}
           onChange={handleChange}
           rows="3"
-          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
+          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring"
           placeholder="Briefly describe the purpose"
           required
         />
@@ -156,9 +194,12 @@ const BookingForm = () => {
         </button>
         <button
           type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-1.5 text-sm rounded"
+          disabled={loading}
+          className={`bg-blue-600 text-white px-5 py-1.5 text-sm rounded hover:bg-blue-700 transition-colors ${
+            loading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
-          Submit
+          {loading ? 'Submitting...' : 'Submit'}
         </button>
       </div>
     </form>
