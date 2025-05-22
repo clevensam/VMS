@@ -1,16 +1,24 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
+const API_URL = 'http://localhost:5000/api/auth';
+
 const AuthPage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('signup');
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const [formData, setFormData] = useState({
+    username: '',   
     email: '',
     password: '',
     confirmPassword: '',
   });
 
   const [errors, setErrors] = useState({});
+  const [message, setMessage] = useState('');
+
 
   const onboardingSlides = [
     {
@@ -65,14 +73,38 @@ const AuthPage = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+const handleSubmit = async (e) => {
+  e.preventDefault();  // Prevents the page from refreshing
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      console.log("Form submitted", formData);
-      alert("Form submitted successfully!");
+  if (validateForm()) {  // If form validation passes
+    try {
+      // Determine the API endpoint based on the active tab (signup or login)
+      const url = activeTab === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+
+      // Make a POST request to the backend
+      const response = await axios.post(`http://localhost:5000${url}`, formData);
+
+      // Show the server response message to the user
+      alert(response.data.message);
+
+      // If login is successful, store the JWT token
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        alert('Login successful!');
+        navigate('/Dashboard'); 
+      }
+
+    } catch (error) {
+      // If there's an error, display the error message
+      if (error.response && error.response.data) {
+        alert(error.response.data.message);
+      } else {
+        alert('An error occurred. Please try again.');
+      }
     }
-  };
+  }
+};
+
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % onboardingSlides.length);
@@ -150,6 +182,8 @@ const AuthPage = () => {
                    id="username" 
                    placeholder="Mr.Doe"
                    name="username"
+                   value={formData.username}          // add value binding
+                   onChange={handleChange} 
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required></input>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
