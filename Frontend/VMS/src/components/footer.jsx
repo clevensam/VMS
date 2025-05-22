@@ -43,7 +43,7 @@ const Footer = () => {
               Contact Us
             </h3>
             <ul className="space-y-2">
-              <li>Phone: +1 (123) 456-7890</li>
+              <li>Phone: +255710074878 | +255764030317</li>
               <li>Email: support@vms.com</li>
             </ul>
           </div>
