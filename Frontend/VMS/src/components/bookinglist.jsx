@@ -1,76 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import BookingCard from './bookingcard';
 import { FaCalendarAlt } from 'react-icons/fa';
 
 const BookingList = () => {
   const [activeTab, setActiveTab] = useState('Pending');
 
-  // Sample booking data categorized by status
-  const bookings = {
-    Pending: [
-      {
-        id: 1,
-        venue: 'Hall A-12',
-        category: 'Lecture',
-        startDate: '2025-05-18T10:00:00',
-        duration: 90,
-        attendees: 40,
-        purpose: 'Midterm exam preparation',
-        status: 'Pending'
-      },
-      {
-        id: 2,
-        venue: 'Lab B-05',
-        category: 'Exam',
-        startDate: '2025-05-20T14:30:00',
-        duration: 60,
-        attendees: 20,
-        purpose: 'Final CS practical',
-        status: 'Pending'
+  // Booking data grouped by status
+  const [bookings, setBookings] = useState({
+    Pending: [],
+    Approved: [],
+    Conflict: []
+  });
+
+  // Fetch and group bookings by status
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/bookings');
+        console.log('Bookings from backend:', res.data); // ✅ Debug log
+
+        const grouped = {
+          Pending: [],
+          Approved: [],
+          Conflict: []
+        };
+
+        res.data.forEach(b => {
+          // Normalize status (e.g., 'pending' → 'Pending')
+          const rawStatus = b.status || 'Pending';
+          const status = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
+
+          if (grouped[status]) {
+            grouped[status].push(b);
+          } else {
+            grouped.Conflict.push(b); // Fallback bucket
+          }
+        });
+
+        setBookings(grouped);
+      } catch (error) {
+        console.error('Failed to fetch bookings:', error);
       }
-    ],
-    Approved: [
-      {
-        id: 3,
-        venue: 'Room C-33',
-        category: 'Meeting',
-        startDate: '2025-05-22T09:00:00',
-        duration: 30,
-        attendees: 10,
-        purpose: 'Department meeting',
-        status: 'Approved'
-      },
-      {
-        id: 4,
-        venue: 'Auditorium',
-        category: 'Workshop',
-        startDate: '2025-05-25T13:00:00',
-        duration: 120,
-        attendees: 100,
-        purpose: 'Tech conference',
-        status: 'Approved'
-      }
-    ],
-    Conflict: [
-      {
-        id: 5,
-        venue: 'Hall A-12',
-        category: 'Lecture',
-        startDate: '2025-05-18T10:30:00',
-        duration: 120,
-        attendees: 50,
-        purpose: 'Guest speaker session',
-        status: 'Conflict'
-      }
-    ]
-  };
+    };
+
+    fetchBookings();
+  }, []);
 
   return (
     <div className="container mx-auto p-6 ml-2">
       {/* Header */}
       <div className="flex items-center mb-6">
         <FaCalendarAlt className="text-blue-600 mr-2 text-xl" />
-        <h1 className="text-2xl font-bold text-gray-800">My Booking </h1>
+        <h1 className="text-2xl font-bold text-gray-800">My Booking</h1>
       </div>
 
       {/* Tabs */}
@@ -101,15 +83,28 @@ const BookingList = () => {
 
       {/* Booking Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* ✅ Temporarily show all bookings for debugging */}
+        {Object.values(bookings).flat().length > 0 ? (
+          Object.values(bookings).flat().map((booking) => (
+            <BookingCard key={booking.booking_id || booking.id} booking={booking} />
+          ))
+        ) : (
+          <div className="col-span-full text-center py-10">
+            <p className="text-gray-500">No bookings found</p>
+          </div>
+        )}
+
+        {/* 📝 To enable tab filtering again, just swap with this below:
         {bookings[activeTab].length > 0 ? (
-          bookings[activeTab].map(booking => (
-            <BookingCard key={booking.id} booking={booking} />
+          bookings[activeTab].map((booking) => (
+            <BookingCard key={booking.booking_id || booking.id} booking={booking} />
           ))
         ) : (
           <div className="col-span-full text-center py-10">
             <p className="text-gray-500">No {activeTab.toLowerCase()} bookings found</p>
           </div>
         )}
+        */}
       </div>
     </div>
   );
