@@ -5,7 +5,11 @@ import { HiOutlineBell, HiOutlineUserCircle } from 'react-icons/hi';
 const TopNavbar = ({ toggleSidebar }) => {
   const [showProfile, setShowProfile] = useState(false);
   const [search, setSearch] = useState("");
-
+const token = localStorage.getItem('token');
+   const handleLogout = () => {
+    localStorage.removeItem('token'); // Remove token
+    window.location.href = '/';       // Redirect to login page
+  };
   return (
     <div className="flex items-center justify-between px-6 py-4 bg-white shadow-md h-20">
       
@@ -53,7 +57,7 @@ const TopNavbar = ({ toggleSidebar }) => {
                 <FaUser />
                 Profile
               </button>
-              <button className="flex items-center gap-2 w-full px-4 py-2 text-red-600 hover:bg-gray-100 text-sm">
+              <button className="flex items-center gap-2 w-full px-4 py-2 text-red-600 hover:bg-gray-100 text-sm" onClick={handleLogout}>
                 <FaSignOutAlt />
                 Logout
               </button>
