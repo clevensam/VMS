@@ -6,6 +6,7 @@ const BookingForm = ({ onBookingCreated }) => {
     venue: '',
     category: '',
     startDate: '',
+    startTime: '',
     duration: '60',
     attendees: 1,
     purpose: ''
@@ -32,31 +33,32 @@ const BookingForm = ({ onBookingCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Purpose must not be empty or whitespace
     if (!formData.purpose.trim()) {
       alert('Purpose cannot be empty.');
       return;
     }
 
-    // Attendees must not exceed venue capacity
     const selectedVenue = venues.find(v => v.id === formData.venue);
     if (selectedVenue && formData.attendees > selectedVenue.capacity) {
       alert(`Attendees exceed capacity of ${selectedVenue.name} (${selectedVenue.capacity})`);
       return;
     }
 
+    // Merge date and time into full datetime string
+    const startDateTime = `${formData.startDate}T${formData.startTime}`;
+
+    const bookingData = {
+      ...formData,
+      startDate: startDateTime // rename if your backend expects 'startDate'
+    };
+
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/bookings', formData);
-      console.log('Booking Response:', response.data);
+      const response = await axios.post('http://localhost:5000/api/bookings', bookingData);
       alert('Booking successful!');
       handleCancel();
 
-      // Notify parent to refresh booking cards
-      if (onBookingCreated) {
-        onBookingCreated();
-      }
-
+      if (onBookingCreated) onBookingCreated();
     } catch (error) {
       console.error('Booking failed:', error);
       alert('Booking failed. Please try again.');
@@ -70,6 +72,7 @@ const BookingForm = ({ onBookingCreated }) => {
       venue: '',
       category: '',
       startDate: '',
+      startTime: '',
       duration: '60',
       attendees: 1,
       purpose: ''
@@ -122,12 +125,12 @@ const BookingForm = ({ onBookingCreated }) => {
         </select>
       </div>
 
-      {/* Date & Duration */}
+      {/* Date & Time Fields */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         <div>
-          <label htmlFor="startDate" className="block text-sm font-medium mb-1">Start Time</label>
+          <label htmlFor="startDate" className="block text-sm font-medium mb-1">Start Date</label>
           <input
-            type="datetime-local"
+            type="date"
             name="startDate"
             id="startDate"
             value={formData.startDate}
@@ -137,20 +140,34 @@ const BookingForm = ({ onBookingCreated }) => {
           />
         </div>
         <div>
-          <label htmlFor="duration" className="block text-sm font-medium mb-1">Duration (minutes)</label>
-          <select
-            name="duration"
-            id="duration"
-            value={formData.duration}
+          <label htmlFor="startTime" className="block text-sm font-medium mb-1">Start Time</label>
+          <input
+            type="time"
+            name="startTime"
+            id="startTime"
+            value={formData.startTime}
             onChange={handleChange}
             className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring"
-          >
-            <option value="30">30</option>
-            <option value="60">60</option>
-            <option value="90">90</option>
-            <option value="120">120</option>
-          </select>
+            required
+          />
         </div>
+      </div>
+
+      {/* Duration */}
+      <div className="mb-3">
+        <label htmlFor="duration" className="block text-sm font-medium mb-1">Duration (minutes)</label>
+        <select
+          name="duration"
+          id="duration"
+          value={formData.duration}
+          onChange={handleChange}
+          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring"
+        >
+          <option value="30">30</option>
+          <option value="60">60</option>
+          <option value="90">90</option>
+          <option value="120">120</option>
+        </select>
       </div>
 
       {/* Attendee Count */}
