@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import BookingCard from './BookingCard';
+import BookingCard from './bookingCard';
 import { FaCalendarAlt, FaSync } from 'react-icons/fa';
 
 const BookingList = ({ refreshTrigger }) => {
@@ -9,71 +9,68 @@ const BookingList = ({ refreshTrigger }) => {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
 
-  // Booking data grouped by status
   const [bookings, setBookings] = useState({
     Pending: [],
     Approved: [],
     Conflict: []
   });
 
-  // Fetch and group bookings by status
+  // 📦 Fetch and group bookings
   const fetchBookings = async () => {
     try {
       setIsLoading(true);
       const res = await axios.get('http://localhost:5000/api/bookings');
-      
+
       const grouped = {
         Pending: [],
         Approved: [],
         Conflict: []
       };
 
-    // In the fetchBookings function:
-res.data.forEach(booking => {
-  // Robust date parsing that handles both ISO strings and your form's format
-  const parseDate = (dateString) => {
-    if (!dateString) return null;
-    // Try ISO format first
-    let date = new Date(dateString);
-    if (!isNaN(date.getTime())) return date;
-    
-    // Try your form's datetime-local format (YYYY-MM-DDTHH:MM)
-    if (typeof dateString === 'string' && dateString.includes('T')) {
-      date = new Date(dateString + ':00'); // Add seconds if missing
-      if (!isNaN(date.getTime())) return date;
-    }
-    
-    return null;
-  };
+      res.data.forEach((booking) => {
+        const parseDate = (dateString) => {
+          if (!dateString) return null;
+          let date = new Date(dateString);
+          if (!isNaN(date)) return date;
 
-  const normalizedBooking = {
-    ...booking,
-    startDate: parseDate(booking.startDate),
-    endDate: parseDate(booking.endDate),
-    // Calculate duration if not provided
-    duration: booking.duration || (
-      booking.startDate && booking.endDate 
-        ? Math.round((new Date(booking.endDate) - new Date(booking.startDate)) / (1000 * 60))
-        : null
-    )
-  };
-  
-  // ... rest
+          // Try fallback format
+          if (typeof dateString === 'string' && dateString.includes('T')) {
+            date = new Date(dateString + ':00');
+            return isNaN(date) ? null : date;
+          }
+          return null;
+        };
 
-        // Normalize status
+        const normalizedBooking = {
+          ...booking,
+          startDate: parseDate(booking.startDate),
+          endDate: parseDate(booking.endDate),
+          duration:
+            booking.duration ||
+            (booking.startDate && booking.endDate
+              ? Math.round((new Date(booking.endDate) - new Date(booking.startDate)) / 60000)
+              : null)
+        };
+
         const rawStatus = booking.status || 'Pending';
         const status = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
 
-        if (grouped[status]) {
-          grouped[status].push(normalizedBooking);
-        } else {
-          grouped.Conflict.push(normalizedBooking);
-        }
+      if (status === 'Cancelled') {
+      // ❌ Exclude cancelled bookings from display
+      return;
+      }
+
+    if (grouped[status]) {
+    grouped[status].push(normalizedBooking);
+    } else {
+    grouped.Conflict.push(normalizedBooking);
+    }
+
       });
 
       setBookings(grouped);
-      setError(null);
       setLastUpdated(new Date());
+      setError(null);
     } catch (err) {
       console.error('Failed to fetch bookings:', err);
       setError('Failed to load bookings. Please try again later.');
@@ -86,19 +83,60 @@ res.data.forEach(booking => {
     fetchBookings();
   }, [refreshTrigger]);
 
-  const handleRefresh = () => {
-    fetchBookings();
+  const handleRefresh = () => fetchBookings();
+
+  // ❌ Cancel Booking
+  const handleCancelBooking = async (bookingId) => {
+    if (!bookingId) return alert('Invalid booking ID.');
+    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+
+    try {
+      await axios.put(`http://localhost:5000/api/bookings/${bookingId}/cancel`);
+      alert('Booking cancelled.');
+      fetchBookings();
+    } catch (err) {
+      console.error('Cancel failed:', err);
+      alert('Failed to cancel booking.');
+    }
+  };
+
+  // 🔄 Reschedule Booking
+  const handleRescheduleBooking = async (booking) => {
+    if (!booking || !booking.id) return alert('Invalid booking data.');
+
+    const defaultDate = booking.startDate?.toISOString().split('T')[0];
+    const defaultTime = booking.startDate?.toTimeString().slice(0, 5);
+
+    const newDate = prompt('Enter new date (YYYY-MM-DD):', defaultDate);
+    const newTime = prompt('Enter new time (HH:MM):', defaultTime);
+    const newDuration = prompt('Enter new duration (minutes):', booking.duration);
+
+    if (!newDate || !newTime || !newDuration) return;
+
+    const startDateTime = `${newDate}T${newTime}`;
+
+    try {
+      await axios.put(`http://localhost:5000/api/bookings/${booking.id}/reschedule`, {
+        startDate: startDateTime,
+        duration: newDuration
+      });
+      alert('Booking rescheduled.');
+      fetchBookings();
+    } catch (err) {
+      console.error('Reschedule failed:', err);
+      alert('Failed to reschedule booking.');
+    }
   };
 
   return (
     <div className="container mx-auto p-6">
-      {/* Header with refresh button */}
+      {/* 📅 Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
           <FaCalendarAlt className="text-blue-600 mr-2 text-xl" />
           <h1 className="text-2xl font-bold text-gray-800">My Bookings</h1>
         </div>
-        <button 
+        <button
           onClick={handleRefresh}
           className="flex items-center text-sm text-blue-600 hover:text-blue-800"
         >
@@ -107,14 +145,13 @@ res.data.forEach(booking => {
         </button>
       </div>
 
-      {/* Last updated time */}
       {lastUpdated && (
         <p className="text-xs text-gray-500 mb-4">
           Last updated: {lastUpdated.toLocaleTimeString()}
         </p>
       )}
 
-      {/* Tabs */}
+      {/* 🔁 Tabs */}
       <div className="flex border-b border-gray-200 mb-6">
         {['Pending', 'Approved', 'Conflict'].map((tab) => (
           <button
@@ -140,33 +177,25 @@ res.data.forEach(booking => {
         ))}
       </div>
 
-      {/* Loading and Error States */}
+      {/* 🪄 Bookings Display */}
       {isLoading ? (
-        <div className="text-center py-10">
-          <p className="text-gray-500">Loading bookings...</p>
-        </div>
+        <div className="text-center py-10 text-gray-500">Loading bookings...</div>
       ) : error ? (
-        <div className="text-center py-10 text-red-500">
-          <p>{error}</p>
-        </div>
+        <div className="text-center py-10 text-red-500">{error}</div>
       ) : (
-        /* Booking Cards Grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {bookings[activeTab].length > 0 ? (
-            bookings[activeTab]
-              .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
-              .map((booking) => (
-                <BookingCard 
-                  key={booking.id || booking._id} 
-                  booking={booking} 
-                  onStatusChange={fetchBookings}
-                />
-              ))
+            bookings[activeTab].map((booking) => (
+              <BookingCard
+                key={booking.id}
+                booking={booking}
+                onCancel={() => handleCancelBooking(booking.id)}
+                onReschedule={() => handleRescheduleBooking(booking)}
+              />
+            ))
           ) : (
-            <div className="col-span-full text-center py-10">
-              <p className="text-gray-500">
-                No {activeTab.toLowerCase()} bookings found
-              </p>
+            <div className="col-span-full text-center py-10 text-gray-500">
+              No {activeTab.toLowerCase()} bookings found
             </div>
           )}
         </div>
