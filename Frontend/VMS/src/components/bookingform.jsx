@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; 
+
 const BookingForm = ({ onBookingCreated }) => {
-    const navigate = useNavigate();
   const [formData, setFormData] = useState({
     venue: '',
     category: '',
@@ -18,17 +17,14 @@ const BookingForm = ({ onBookingCreated }) => {
   const venues = [
     { id: 'hall1', name: 'Main Hall', capacity: 100 },
     { id: 'conf1', name: 'Conference Room A', capacity: 40 },
-    { id: 'meet1', name: 'Meeting Room 1', capacity: 20 },
+    { id: 'meet1', name: 'Meeting Room 1', capacity: 20 }
   ];
 
   const categories = ['Exam', 'Meeting', 'Lecture', 'Event'];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -40,26 +36,28 @@ const BookingForm = ({ onBookingCreated }) => {
     }
 
     const selectedVenue = venues.find(v => v.id === formData.venue);
-    if (selectedVenue && formData.attendees > selectedVenue.capacity) {
+    if (selectedVenue && Number(formData.attendees) > selectedVenue.capacity) {
       alert(`Attendees exceed capacity of ${selectedVenue.name} (${selectedVenue.capacity})`);
       return;
     }
 
-    // Merge date and time into full datetime string
-    const startDateTime = `${formData.startDate}T${formData.startTime}`;
+    const start_time = `${formData.startDate}T${formData.startTime}`;
 
     const bookingData = {
-      ...formData,
-      startDate: startDateTime // rename if your backend expects 'startDate'
+      venue: formData.venue,
+      category: formData.category,
+      start_time,
+      duration: Number(formData.duration),       // ✅ ensure number
+      attendees: Number(formData.attendees),     // ✅ ensure number
+      purpose: formData.purpose
     };
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/bookings', bookingData);
+      await axios.post('http://localhost:5000/api/bookings', bookingData);
+      alert('Booking successful!');
       handleCancel();
-
       if (onBookingCreated) onBookingCreated();
-      navigate('/bookings/my_booking');
     } catch (error) {
       console.error('Booking failed:', error);
       alert('Booking failed. Please try again.');
@@ -81,14 +79,14 @@ const BookingForm = ({ onBookingCreated }) => {
   };
 
   return (
-    <form 
-      onSubmit={handleSubmit} 
+    <form
+      onSubmit={handleSubmit}
       className="w-full max-w-md p-4 bg-white rounded-md shadow-lg ml-120 mb-10"
       autoComplete="off"
     >
       <h2 className="text-lg font-semibold mb-4">Booking Request</h2>
 
-      {/* Venue Selection */}
+      {/* Venue */}
       <div className="mb-3">
         <label htmlFor="venue" className="block text-sm font-medium mb-1">Venue</label>
         <select
@@ -108,7 +106,7 @@ const BookingForm = ({ onBookingCreated }) => {
         </select>
       </div>
 
-      {/* Category Selection */}
+      {/* Category */}
       <div className="mb-3">
         <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
         <select
@@ -126,7 +124,7 @@ const BookingForm = ({ onBookingCreated }) => {
         </select>
       </div>
 
-      {/* Date & Time Fields */}
+      {/* Date & Time */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         <div>
           <label htmlFor="startDate" className="block text-sm font-medium mb-1">Start Date</label>
@@ -171,7 +169,7 @@ const BookingForm = ({ onBookingCreated }) => {
         </select>
       </div>
 
-      {/* Attendee Count */}
+      {/* Attendees */}
       <div className="mb-3">
         <label htmlFor="attendees" className="block text-sm font-medium mb-1">Number of Attendees</label>
         <input
@@ -180,9 +178,9 @@ const BookingForm = ({ onBookingCreated }) => {
           id="attendees"
           value={formData.attendees}
           onChange={handleChange}
-          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring"
           min="1"
           required
+          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring"
         />
       </div>
 
@@ -195,13 +193,13 @@ const BookingForm = ({ onBookingCreated }) => {
           value={formData.purpose}
           onChange={handleChange}
           rows="3"
-          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring"
           placeholder="Briefly describe the purpose"
           required
+          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring"
         />
       </div>
 
-      {/* Action Buttons */}
+      {/* Buttons */}
       <div className="flex justify-end gap-3">
         <button
           type="button"

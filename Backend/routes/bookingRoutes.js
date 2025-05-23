@@ -5,48 +5,76 @@ const db = require('../db');
 
 // ✅ Create a new booking
 router.post('/', (req, res) => {
-  const { venue, category, startDate, duration, attendees, purpose } = req.body;
+  const {
+    venue,
+    category,
+    start_time, // May come as `start_time` or `startDate`
+    startDate,
+    duration,
+    attendees,
+    purpose
+  } = req.body;
 
-  if (!venue || !category || !startDate || !duration || !attendees || !purpose) {
+  const unifiedStart = start_time || startDate;
+
+  if (!venue || !category || !unifiedStart || !duration || !attendees || !purpose) {
+    console.warn('⚠️ Missing required fields:', {
+      venue,
+      category,
+      unifiedStart,
+      duration,
+      attendees,
+      purpose
+    });
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
+  const [start_date, start_time_only] = unifiedStart.split('T');
+
   const sql = `
     INSERT INTO bookings 
-    (venue_id, category, start_time, duration_minutes, attendees, purpose, status)
-    VALUES (?, ?, ?, ?, ?, ?, 'Pending')
+    (venue_id, category, start_date, start_time, duration_minutes, attendees, purpose, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')
   `;
 
-  db.query(sql, [venue, category, startDate, duration, attendees, purpose], (err, result) => {
-    if (err) {
-      console.error('❌ Error inserting booking:', err);
-      return res.status(500).json({ error: 'Booking failed' });
+  db.query(
+    sql,
+    [venue, category, start_date, start_time_only, duration, attendees, purpose],
+    (err, result) => {
+      if (err) {
+        console.error('❌ Error inserting booking into DB:', err.sqlMessage || err);
+        return res.status(500).json({ error: 'Booking failed', details: err.sqlMessage });
+      }
+
+      res.status(201).json({ message: 'Booking successful', bookingId: result.insertId });
     }
-    res.status(201).json({ message: 'Booking successful', bookingId: result.insertId });
-  });
+  );
 });
 
-// ✅ Get all bookings
+// ✅ Get all bookings (excluding cancelled)
 router.get('/', (req, res) => {
   const sql = `
     SELECT 
-      booking_id AS id,
+      id,
       venue_id AS venue,
       category,
-      start_time AS startDate,
+      start_date,
+      start_time,
       duration_minutes AS duration,
       attendees,
       purpose,
       status
     FROM bookings
-    ORDER BY start_time DESC
+    WHERE status != 'Cancelled'
+    ORDER BY start_date DESC, start_time DESC
   `;
 
   db.query(sql, (err, results) => {
     if (err) {
-      console.error('❌ Error fetching bookings:', err);
+      console.error('❌ Error fetching bookings:', err.sqlMessage || err);
       return res.status(500).json({ error: 'Failed to fetch bookings' });
     }
+
     res.json(results);
   });
 });
@@ -54,11 +82,11 @@ router.get('/', (req, res) => {
 // ✅ Cancel a booking
 router.put('/:id/cancel', (req, res) => {
   const bookingId = req.params.id;
-  const sql = `UPDATE bookings SET status = 'Cancelled' WHERE booking_id = ?`;
+  const sql = `UPDATE bookings SET status = 'Cancelled' WHERE id = ?`;
 
   db.query(sql, [bookingId], (err, result) => {
     if (err) {
-      console.error('❌ Error cancelling booking:', err);
+      console.error('❌ Error cancelling booking:', err.sqlMessage || err);
       return res.status(500).json({ error: 'Failed to cancel booking' });
     }
 
@@ -76,18 +104,20 @@ router.put('/:id/reschedule', (req, res) => {
   const bookingId = req.params.id;
 
   if (!startDate || !duration) {
-    return res.status(400).json({ error: 'Missing new date or duration' });
+    return res.status(400).json({ error: 'Missing new start time or duration' });
   }
+
+  const [start_date, start_time_only] = startDate.split('T');
 
   const sql = `
     UPDATE bookings 
-    SET start_time = ?, duration_minutes = ?, status = 'Pending'
-    WHERE booking_id = ?
+    SET start_date = ?, start_time = ?, duration_minutes = ?, status = 'Pending'
+    WHERE id = ?
   `;
 
-  db.query(sql, [startDate, duration, bookingId], (err, result) => {
+  db.query(sql, [start_date, start_time_only, duration, bookingId], (err, result) => {
     if (err) {
-      console.error('❌ Error rescheduling booking:', err);
+      console.error('❌ Error rescheduling booking:', err.sqlMessage || err);
       return res.status(500).json({ error: 'Failed to reschedule booking' });
     }
 
@@ -99,9 +129,8 @@ router.put('/:id/reschedule', (req, res) => {
   });
 });
 
-// ✅ Debug route to verify connection
+// ✅ Debug route
 router.get('/test', (req, res) => {
-  console.log('✅ /api/bookings/test route hit');
   res.send('✅ bookingRoutes is working!');
 });
 

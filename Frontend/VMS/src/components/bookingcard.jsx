@@ -44,9 +44,10 @@ const BookingCard = ({ booking, onReschedule, onCancel }) => {
     ? booking.status.charAt(0).toUpperCase() + booking.status.slice(1).toLowerCase()
     : 'Pending';
 
-  const formatDate = (date) => {
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Not specified';
     try {
-      const d = new Date(date);
+      const d = new Date(dateStr);
       return d.toLocaleDateString('en-US', {
         weekday: 'short',
         month: 'short',
@@ -57,9 +58,10 @@ const BookingCard = ({ booking, onReschedule, onCancel }) => {
     }
   };
 
-  const formatTime = (date) => {
+  const formatTime = (timeStr) => {
+    if (!timeStr) return 'Not specified';
     try {
-      const d = new Date(date);
+      const d = new Date(`1970-01-01T${timeStr}`);
       return d.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
@@ -88,27 +90,31 @@ const BookingCard = ({ booking, onReschedule, onCancel }) => {
       <div className="space-y-3 mb-4">
         <div className="flex items-center text-sm text-gray-600">
           <FaCalendarAlt className="text-blue-400 mr-2" />
-          <span><strong>Date:</strong> {formatDate(booking.startDate)}</span>
+          <span><strong>Date:</strong> {formatDate(booking.originalDate)}</span>
         </div>
+
         <div className="flex items-center text-sm text-gray-600">
           <FaClock className="text-blue-400 mr-2" />
           <span>
-            <strong>Time:</strong> {formatTime(booking.startDate)}
-            {booking.endDate && ` - ${formatTime(booking.endDate)}`}
+            <strong>Time:</strong> {formatTime(booking.originalTime)}
           </span>
         </div>
+
         <div className="flex items-center text-sm text-gray-600">
           <FaClock className="text-blue-400 mr-2" />
           <span><strong>Duration:</strong> {booking.duration || 'N/A'} minutes</span>
         </div>
+
         <div className="flex items-center text-sm text-gray-600">
           <FaUsers className="text-blue-400 mr-2" />
           <span><strong>Attendees:</strong> {booking.attendees || 'N/A'}</span>
         </div>
+
         <div className="flex items-start text-sm text-gray-600">
           <FaClipboardList className="text-blue-400 mr-2 mt-0.5" />
           <span><strong>Purpose:</strong> {booking.purpose || 'Not specified'}</span>
         </div>
+
         <div className="flex items-center text-sm">
           <span className="mr-2">{statusConfig[normalizedStatus]?.icon}</span>
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -122,14 +128,14 @@ const BookingCard = ({ booking, onReschedule, onCancel }) => {
       {/* Actions */}
       <div className="flex justify-end gap-3 border-t pt-3">
         <button
-          onClick={() => onCancel(booking.id)}
+          onClick={() => onCancel?.(booking.id)}
           className="flex items-center text-sm text-red-500 hover:text-red-700 transition-colors"
         >
           <FaBan className="mr-1" />
           Cancel Booking
         </button>
         <button
-          onClick={() => onReschedule(booking)}
+          onClick={() => onReschedule?.(booking)}
           className="flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
         >
           <FaCalendarPlus className="mr-1" />

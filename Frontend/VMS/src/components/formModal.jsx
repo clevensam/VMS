@@ -25,8 +25,12 @@ const BookingModal = ({ initialVenue = '', onClose, onBookingCreated }) => {
 
   const [loading, setLoading] = useState(false);
 
+  // 🛠️ Map initialVenue to correct venue ID
   useEffect(() => {
-    setFormData(prev => ({ ...prev, venue: initialVenue }));
+    const matchedByName = venues.find(v => v.name === initialVenue);
+    const matchedById = venues.find(v => v.id === initialVenue);
+    const finalVenueId = matchedById?.id || matchedByName?.id || '';
+    setFormData(prev => ({ ...prev, venue: finalVenueId }));
   }, [initialVenue]);
 
   const handleChange = (e) => {
@@ -48,18 +52,22 @@ const BookingModal = ({ initialVenue = '', onClose, onBookingCreated }) => {
       return;
     }
 
-    const startDateTime = `${formData.startDate}T${formData.startTime}`;
+    const start_time = `${formData.startDate}T${formData.startTime}`;
 
     const bookingData = {
-      ...formData,
-      startDate: startDateTime // make sure this matches your backend's expected key
+      venue: formData.venue,
+      category: formData.category,
+      start_time, // ✅ correct key for backend
+      duration: formData.duration,
+      attendees: formData.attendees,
+      purpose: formData.purpose
     };
-    
+
     setLoading(true);
     try {
       await axios.post('http://localhost:5000/api/bookings', bookingData);
       if (onBookingCreated) onBookingCreated();
-      onClose(); // Close modal
+      onClose();
       navigate('/bookings/my_booking');
     } catch (err) {
       console.error(err);

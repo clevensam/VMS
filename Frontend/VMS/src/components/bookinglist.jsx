@@ -9,7 +9,7 @@ const BookingList = ({ refreshTrigger }) => {
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const initialTab = queryParams.get('tab') || 'Pending';
-  
+
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,7 +26,6 @@ const BookingList = ({ refreshTrigger }) => {
     Conflict: []
   });
 
-  // 📦 Fetch and group bookings
   const fetchBookings = async () => {
     try {
       setIsLoading(true);
@@ -39,55 +38,34 @@ const BookingList = ({ refreshTrigger }) => {
       };
 
       res.data.forEach((booking) => {
-        const parseDate = (dateString) => {
-          if (!dateString) return null;
-          let date = new Date(dateString);
-          if (!isNaN(date)) return date;
+        if (booking.status?.toLowerCase() === 'cancelled') return;
 
-          // Try fallback format
-          if (typeof dateString === 'string' && dateString.includes('T')) {
-            date = new Date(dateString + ':00');
-            return isNaN(date) ? null : date;
-          }
-          return null;
-        };
+        const { start_date, start_time } = booking;
+        const dateTime = start_date && start_time ? new Date(`${start_date}T${start_time}`) : null;
 
         const normalizedBooking = {
           ...booking,
-          startDate: parseDate(booking.startDate),
-          endDate: parseDate(booking.endDate),
-          duration:
-            booking.duration ||
-            (booking.startDate && booking.endDate
-              ? Math.round((new Date(booking.endDate) - new Date(booking.startDate)) / 60000)
-              : null)
+          startDate: dateTime,
+          originalDate: start_date,
+          originalTime: start_time,
+          duration: booking.duration
         };
 
-        const rawStatus = booking.status || 'Pending';
-        const status = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
+        const normalizedStatus = booking.status
+          ? booking.status.charAt(0).toUpperCase() + booking.status.slice(1).toLowerCase()
+          : 'Pending';
 
-      if (status === 'Cancelled') {
-      // ❌ Exclude cancelled bookings from display
-      return;
-      }
-
-    if (grouped[status]) {
-    grouped[status].push(normalizedBooking);
-    } else {
-    grouped.Conflict.push(normalizedBooking);
-    }
-
+        if (['Pending', 'Approved', 'Conflict'].includes(normalizedStatus)) {
+          grouped[normalizedStatus].push(normalizedBooking);
+        }
       });
 
       setBookings(grouped);
-      
-      // Update booking counts
       setBookingCounts({
         Pending: grouped.Pending.length,
         Approved: grouped.Approved.length,
         Conflict: grouped.Conflict.length
       });
-      
       setLastUpdated(new Date());
       setError(null);
     } catch (err) {
@@ -102,7 +80,6 @@ const BookingList = ({ refreshTrigger }) => {
     fetchBookings();
   }, [refreshTrigger]);
 
-  // Update tab when URL changes
   useEffect(() => {
     const tab = queryParams.get('tab');
     if (tab && ['Pending', 'Approved', 'Conflict'].includes(tab)) {
@@ -117,7 +94,6 @@ const BookingList = ({ refreshTrigger }) => {
 
   const handleRefresh = () => fetchBookings();
 
-  // ❌ Cancel Booking
   const handleCancelBooking = async (bookingId) => {
     if (!bookingId) return alert('Invalid booking ID.');
     if (!window.confirm('Are you sure you want to cancel this booking?')) return;
@@ -132,12 +108,11 @@ const BookingList = ({ refreshTrigger }) => {
     }
   };
 
-  // 🔄 Reschedule Booking
   const handleRescheduleBooking = async (booking) => {
     if (!booking || !booking.id) return alert('Invalid booking data.');
 
-    const defaultDate = booking.startDate?.toISOString().split('T')[0];
-    const defaultTime = booking.startDate?.toTimeString().slice(0, 5);
+    const defaultDate = booking.originalDate || '';
+    const defaultTime = booking.originalTime || '';
 
     const newDate = prompt('Enter new date (YYYY-MM-DD):', defaultDate);
     const newTime = prompt('Enter new time (HH:MM):', defaultTime);
@@ -162,7 +137,6 @@ const BookingList = ({ refreshTrigger }) => {
 
   return (
     <div className="container mx-auto p-6">
-      {/* 📅 Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
           <FaCalendarAlt className="text-blue-600 mr-2 text-xl" />
@@ -183,7 +157,6 @@ const BookingList = ({ refreshTrigger }) => {
         </p>
       )}
 
-      {/* 🔁 Tabs */}
       <div className="flex border-b border-gray-200 mb-6">
         {['Pending', 'Approved', 'Conflict'].map((tab) => (
           <button
@@ -209,7 +182,6 @@ const BookingList = ({ refreshTrigger }) => {
         ))}
       </div>
 
-      {/* 🪄 Bookings Display */}
       {isLoading ? (
         <div className="text-center py-10 text-gray-500">Loading bookings...</div>
       ) : error ? (
@@ -220,11 +192,11 @@ const BookingList = ({ refreshTrigger }) => {
             bookings[activeTab]
               .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
               .map((booking) => (
-                <BookingCard 
-                  key={booking.id || booking._id} 
-                  booking={booking} 
-                  onReschedule={() => console.log('Reschedule', booking.id)}
-                  onCancel={() => console.log('Cancel', booking.id)}
+                <BookingCard
+                  key={booking.id}
+                  booking={booking}
+                  onReschedule={() => handleRescheduleBooking(booking)}
+                  onCancel={() => handleCancelBooking(booking.id)}
                 />
               ))
           ) : (
