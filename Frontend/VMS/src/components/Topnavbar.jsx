@@ -18,22 +18,11 @@ const token = localStorage.getItem('token');
         <button onClick={toggleSidebar} className="text-blue-600 text-2xl">
           <FaBars />
         </button>
-        <span className="text-xl font-bold text-blue-600">VMS</span>
+        <span className="text-xl font-bold text-blue-600">VENUE MANANGEMENT SYSTEM</span>
       </div>
 
       {/* Center: Search Bar with Filter */}
-      <div className="flex items-center gap-3 flex-1 mx-8">
-        <input
-          type="text"
-          placeholder="Search venue or booking..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <button className="p-2 bg-blue-100 text-blue-600 rounded-md hover:bg-blue-200">
-          <FaFilter />
-        </button>
-      </div>
+     
 
       {/* Right: Bell + Profile Dropdown */}
       <div className="flex items-center gap-6">

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   FaBuilding,
   FaCalendarAlt,
@@ -8,38 +9,13 @@ import {
   FaCheckCircle,
   FaHourglassHalf,
   FaTimesCircle,
+  FaSync,
 } from 'react-icons/fa';
 
 const RecentlyBooked = () => {
-  const bookings = [
-    {
-      id: 1,
-      venue: 'Hall A-12',
-      startDate: '2025-05-18T10:00:00',
-      duration: 90,
-      attendees: 40,
-      purpose: 'Midterm exam preparation',
-      status: 'Approved',
-    },
-    {
-      id: 2,
-      venue: 'Lab B-05',
-      startDate: '2025-05-20T14:30:00',
-      duration: 60,
-      attendees: 20,
-      purpose: 'Final CS practical exam',
-      status: 'Pending',
-    },
-    {
-      id: 3,
-      venue: 'Room C-33',
-      startDate: '2025-05-22T09:00:00',
-      duration: 30,
-      attendees: 10,
-      purpose: 'Department meeting',
-      status: 'Approved',
-    },
-  ];
+  const [bookings, setBookings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const statusIcons = {
     Approved: <FaCheckCircle className="text-green-500" />,
@@ -47,31 +23,88 @@ const RecentlyBooked = () => {
     Rejected: <FaTimesCircle className="text-red-500" />,
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+  const fetchBookings = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axios.get('http://localhost:5000/api/bookings');
+
+      const parseDate = (dateString) => {
+        if (!dateString) return null;
+        let date = new Date(dateString);
+        if (!isNaN(date.getTime())) return date;
+
+        if (typeof dateString === 'string' && dateString.includes('T')) {
+          date = new Date(dateString + ':00');
+          if (!isNaN(date.getTime())) return date;
+        }
+        return null;
+      };
+
+      const normalized = res.data.map((booking) => ({
+        ...booking,
+        startDate: parseDate(booking.startDate),
+        endDate: parseDate(booking.endDate),
+        duration:
+          booking.duration ||
+          (booking.startDate && booking.endDate
+            ? Math.round(
+                (new Date(booking.endDate) - new Date(booking.startDate)) /
+                  (1000 * 60)
+              )
+            : null),
+      }));
+
+      const sorted = normalized.sort(
+        (a, b) => new Date(b.startDate) - new Date(a.startDate)
+      );
+
+      setBookings(sorted);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching bookings:', err);
+      setError('Failed to load bookings. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  const formatDate = (date) =>
+    date?.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     });
-  };
 
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
+  const formatTime = (date) =>
+    date?.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
 
   return (
     <div className="bg-white rounded-lg p-4 border border-gray-200 overflow-x-auto">
-      <h3 className="font-bold text-gray-800 mb-4 flex items-center text-xl">
-        <FaCalendarAlt className="mr-2 text-blue-500" />
-        Recent Bookings
-      </h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-bold text-gray-800 flex items-center text-xl">
+          <FaCalendarAlt className="mr-2 text-blue-500" />
+          Recent Bookings
+        </h3>
+        <button
+          onClick={fetchBookings}
+          className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+        >
+          <FaSync className="mr-1" /> Refresh
+        </button>
+      </div>
 
-      {bookings.length === 0 ? (
+      {isLoading ? (
+        <p className="text-sm text-gray-500">Loading bookings...</p>
+      ) : error ? (
+        <p className="text-sm text-red-500">{error}</p>
+      ) : bookings.length === 0 ? (
         <p className="text-sm text-gray-500">No recent bookings available.</p>
       ) : (
         <table className="w-full text-sm text-left text-gray-700">
@@ -87,14 +120,24 @@ const RecentlyBooked = () => {
           </thead>
           <tbody>
             {bookings.map((booking) => (
-              <tr key={booking.id} className="border-t border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-4 font-medium text-gray-900">{booking.venue}</td>
+              <tr
+                key={booking.id || booking._id}
+                className="border-t border-gray-100 hover:bg-gray-50"
+              >
+                <td className="py-3 px-4 font-medium text-gray-900">
+                  {booking.venue}
+                </td>
                 <td className="py-3 px-4">{formatDate(booking.startDate)}</td>
                 <td className="py-3 px-4">
-                  {formatTime(booking.startDate)} <span className="text-gray-400">•</span> {booking.duration} mins
+                  {formatTime(booking.startDate)}{' '}
+                  <span className="text-gray-400">•</span>{' '}
+                  {booking.duration ?? '-'} mins
                 </td>
                 <td className="py-3 px-4">{booking.attendees}</td>
-                <td className="py-3 px-4 max-w-xs truncate" title={booking.purpose}>
+                <td
+                  className="py-3 px-4 max-w-xs truncate"
+                  title={booking.purpose}
+                >
                   {booking.purpose}
                 </td>
                 <td className="py-3 px-4">
@@ -108,7 +151,7 @@ const RecentlyBooked = () => {
                           : 'bg-red-100 text-red-700'
                       }`}
                   >
-                    {statusIcons[booking.status]} {booking.status}
+                    {statusIcons[booking.status] ?? <FaTimesCircle className="text-gray-400" />} {booking.status}
                   </span>
                 </td>
               </tr>

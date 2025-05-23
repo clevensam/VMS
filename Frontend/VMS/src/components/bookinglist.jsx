@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import BookingCard from './BookingCard';
 import { FaCalendarAlt, FaSync } from 'react-icons/fa';
-
+import { useLocation } from 'react-router-dom';
 const BookingList = ({ refreshTrigger }) => {
+   const location = useLocation();
   const [activeTab, setActiveTab] = useState('Pending');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+const queryParams = new URLSearchParams(location.search);
+  const initialTab = queryParams.get('tab') || 'Pending';
+
 
   // Booking data grouped by status
   const [bookings, setBookings] = useState({
