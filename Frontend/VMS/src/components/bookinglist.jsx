@@ -2,16 +2,23 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import BookingCard from './BookingCard';
 import { FaCalendarAlt, FaSync } from 'react-icons/fa';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+
 const BookingList = ({ refreshTrigger }) => {
-   const location = useLocation();
-  const [activeTab, setActiveTab] = useState('Pending');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryParams = new URLSearchParams(location.search);
+  const initialTab = queryParams.get('tab') || 'Pending';
+  
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-const queryParams = new URLSearchParams(location.search);
-  const initialTab = queryParams.get('tab') || 'Pending';
-
+  const [bookingCounts, setBookingCounts] = useState({
+    Pending: 0,
+    Approved: 0,
+    Conflict: 0
+  });
 
   // Booking data grouped by status
   const [bookings, setBookings] = useState({
@@ -32,38 +39,32 @@ const queryParams = new URLSearchParams(location.search);
         Conflict: []
       };
 
-    // In the fetchBookings function:
-res.data.forEach(booking => {
-  // Robust date parsing that handles both ISO strings and your form's format
-  const parseDate = (dateString) => {
-    if (!dateString) return null;
-    // Try ISO format first
-    let date = new Date(dateString);
-    if (!isNaN(date.getTime())) return date;
-    
-    // Try your form's datetime-local format (YYYY-MM-DDTHH:MM)
-    if (typeof dateString === 'string' && dateString.includes('T')) {
-      date = new Date(dateString + ':00'); // Add seconds if missing
-      if (!isNaN(date.getTime())) return date;
-    }
-    
-    return null;
-  };
+      res.data.forEach(booking => {
+        // Robust date parsing
+        const parseDate = (dateString) => {
+          if (!dateString) return null;
+          let date = new Date(dateString);
+          if (!isNaN(date.getTime())) return date;
+          
+          if (typeof dateString === 'string' && dateString.includes('T')) {
+            date = new Date(dateString + ':00');
+            if (!isNaN(date.getTime())) return date;
+          }
+          
+          return null;
+        };
 
-  const normalizedBooking = {
-    ...booking,
-    startDate: parseDate(booking.startDate),
-    endDate: parseDate(booking.endDate),
-    // Calculate duration if not provided
-    duration: booking.duration || (
-      booking.startDate && booking.endDate 
-        ? Math.round((new Date(booking.endDate) - new Date(booking.startDate)) / (1000 * 60))
-        : null
-    )
-  };
-  
-  // ... rest
-
+        const normalizedBooking = {
+          ...booking,
+          startDate: parseDate(booking.startDate),
+          endDate: parseDate(booking.endDate),
+          duration: booking.duration || (
+            booking.startDate && booking.endDate 
+              ? Math.round((new Date(booking.endDate) - new Date(booking.startDate)) / (1000 * 60))
+              : null
+          )
+        };
+        
         // Normalize status
         const rawStatus = booking.status || 'Pending';
         const status = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
@@ -76,6 +77,14 @@ res.data.forEach(booking => {
       });
 
       setBookings(grouped);
+      
+      // Update booking counts
+      setBookingCounts({
+        Pending: grouped.Pending.length,
+        Approved: grouped.Approved.length,
+        Conflict: grouped.Conflict.length
+      });
+      
       setError(null);
       setLastUpdated(new Date());
     } catch (err) {
@@ -89,6 +98,19 @@ res.data.forEach(booking => {
   useEffect(() => {
     fetchBookings();
   }, [refreshTrigger]);
+
+  // Update tab when URL changes
+  useEffect(() => {
+    const tab = queryParams.get('tab');
+    if (tab && ['Pending', 'Approved', 'Conflict'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    navigate(`/bookings/my_booking?tab=${tab}`);
+  };
 
   const handleRefresh = () => {
     fetchBookings();
@@ -128,7 +150,7 @@ res.data.forEach(booking => {
                 ? 'text-blue-600 border-b-2 border-blue-600'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => handleTabChange(tab)}
           >
             {tab}
             {bookings[tab].length > 0 && (
@@ -163,7 +185,8 @@ res.data.forEach(booking => {
                 <BookingCard 
                   key={booking.id || booking._id} 
                   booking={booking} 
-                  onStatusChange={fetchBookings}
+                  onReschedule={() => console.log('Reschedule', booking.id)}
+                  onCancel={() => console.log('Cancel', booking.id)}
                 />
               ))
           ) : (
