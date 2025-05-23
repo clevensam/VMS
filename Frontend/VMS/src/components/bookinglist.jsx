@@ -2,12 +2,23 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import BookingCard from './bookingCard';
 import { FaCalendarAlt, FaSync } from 'react-icons/fa';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const BookingList = ({ refreshTrigger }) => {
-  const [activeTab, setActiveTab] = useState('Pending');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryParams = new URLSearchParams(location.search);
+  const initialTab = queryParams.get('tab') || 'Pending';
+  
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [bookingCounts, setBookingCounts] = useState({
+    Pending: 0,
+    Approved: 0,
+    Conflict: 0
+  });
 
   const [bookings, setBookings] = useState({
     Pending: [],
@@ -69,6 +80,14 @@ const BookingList = ({ refreshTrigger }) => {
       });
 
       setBookings(grouped);
+      
+      // Update booking counts
+      setBookingCounts({
+        Pending: grouped.Pending.length,
+        Approved: grouped.Approved.length,
+        Conflict: grouped.Conflict.length
+      });
+      
       setLastUpdated(new Date());
       setError(null);
     } catch (err) {
@@ -82,6 +101,19 @@ const BookingList = ({ refreshTrigger }) => {
   useEffect(() => {
     fetchBookings();
   }, [refreshTrigger]);
+
+  // Update tab when URL changes
+  useEffect(() => {
+    const tab = queryParams.get('tab');
+    if (tab && ['Pending', 'Approved', 'Conflict'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    navigate(`/bookings/my_booking?tab=${tab}`);
+  };
 
   const handleRefresh = () => fetchBookings();
 
@@ -161,7 +193,7 @@ const BookingList = ({ refreshTrigger }) => {
                 ? 'text-blue-600 border-b-2 border-blue-600'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => handleTabChange(tab)}
           >
             {tab}
             {bookings[tab].length > 0 && (
@@ -185,14 +217,16 @@ const BookingList = ({ refreshTrigger }) => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {bookings[activeTab].length > 0 ? (
-            bookings[activeTab].map((booking) => (
-              <BookingCard
-                key={booking.id}
-                booking={booking}
-                onCancel={() => handleCancelBooking(booking.id)}
-                onReschedule={() => handleRescheduleBooking(booking)}
-              />
-            ))
+            bookings[activeTab]
+              .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
+              .map((booking) => (
+                <BookingCard 
+                  key={booking.id || booking._id} 
+                  booking={booking} 
+                  onReschedule={() => console.log('Reschedule', booking.id)}
+                  onCancel={() => console.log('Cancel', booking.id)}
+                />
+              ))
           ) : (
             <div className="col-span-full text-center py-10 text-gray-500">
               No {activeTab.toLowerCase()} bookings found

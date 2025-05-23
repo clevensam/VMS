@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-
+import { useNavigate } from 'react-router-dom'; 
 const BookingForm = ({ onBookingCreated }) => {
+    const navigate = useNavigate();
   const [formData, setFormData] = useState({
     venue: '',
     category: '',
@@ -55,10 +56,10 @@ const BookingForm = ({ onBookingCreated }) => {
     setLoading(true);
     try {
       const response = await axios.post('http://localhost:5000/api/bookings', bookingData);
-      alert('Booking successful!');
       handleCancel();
 
       if (onBookingCreated) onBookingCreated();
+      navigate('/bookings/my_booking');
     } catch (error) {
       console.error('Booking failed:', error);
       alert('Booking failed. Please try again.');
